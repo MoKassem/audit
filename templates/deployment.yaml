@@ -1,0 +1,125 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "audit.fullname" . }}
+  labels:
+    app: {{ template "audit.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "audit.name" . }}
+        release: {{ .Release.Name }}
+        {{- range $key, $val := .Values.podLabels }}
+        {{- if tpl ($val) $}}
+        {{ tpl ($key) $ }}: {{ tpl ($val) $ | quote }}
+        {{- end }}
+        {{- end}}
+    spec:
+      containers:
+        - name: {{ template "audit.name" . }}
+          image: {{ template "audit.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          {{- if .Values.resources }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          {{- end }}
+          env:
+            - name: TERMINATION_GRACE_PERIOD_SECONDS
+              value: {{ .Values.terminationGracePeriodSeconds | quote }}
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  {{ if .Values.mongodb.uriSecretName -}}
+                  name: {{ .Values.mongodb.uriSecretName }}
+                  {{ else -}}
+                  name: {{ .Release.Name }}-mongoconfig
+                  {{ end -}}
+                  key: mongodb-uri
+            - name: PDS_URI
+              value: {{ default (printf "http://%s-policy-decisions:5080" .Release.Name ) .Values.config.pdsURI | quote }}
+            - name: ACCESS_CONTROL_ENABLED
+              value: {{ default false .Values.config.accessControl.enabled | quote }}
+            - name: LOG_LEVEL
+              value: {{ default "info" .Values.config.logLevel | quote }}
+            {{- if .Values.config.featureFlagsURI }}
+            - name: FEATURE_FLAGS_URI
+              value: {{ tpl (.Values.config.featureFlagsURI) . | quote }}
+            {{- end }}
+            {{- if .Values.config.auth.enabled }}
+            - name: AUTH_ENABLED
+              value: {{ default false .Values.config.auth.enabled | quote }}
+            - name: AUTH_JWKS_URI
+              value: {{ default (printf "http://%s-keys:8080/v1/keys/qlik.api.internal" .Release.Name ) .Values.config.auth.jwksURI | quote }}
+            - name: AUTH_JWT_AUD
+              value: {{ .Values.config.auth.jwtAud | quote }}
+            - name: AUTH_JWT_ISS
+              value: {{ .Values.config.auth.jwtIss | quote }}
+            {{- end }}
+            {{- if .Values.config.tokenAuth.enabled }}
+            - name: TOKEN_AUTH_ENABLED
+              value: {{ default false .Values.config.tokenAuth.enabled | quote }}
+            - name: TOKEN_AUTH_PRIVATE_KEY
+              value: {{ .Values.config.tokenAuth.privateKey | quote }}
+            - name: TOKEN_AUTH_KID
+              value: {{ .Values.config.tokenAuth.kid | quote }}
+            - name: TOKEN_AUTH_URL
+              value: {{ tpl ( .Values.config.tokenAuth.url ) . | quote }}
+            {{- end }}
+            - name: NATS_ENABLED
+              value: {{ default true .Values.config.nats.enabled | quote }}
+            - name: NATS_SERVERS
+              value: {{ tpl ( .Values.config.nats.servers ) . | quote }}
+            - name: NATS_CHANNELS
+              value: {{ default (printf "" ) .Values.config.nats.channels | quote }}
+            - name: NATS_STREAMING_CLUSTER_ID
+              value: {{ tpl ( .Values.config.stan.clusterID ) . | quote }}
+            - name: ARCHIVE_ENABLED
+              value: {{ default false .Values.config.archive.enabled | quote }}
+            - name: ARCHIVE_INTERVAL
+              value: {{ .Values.config.archive.interval | quote }}
+            {{- if .Values.config.archive.enabled }}
+            - name: STORAGE_ENDPOINT
+              value: {{ tpl ( .Values.config.storage.endpoint ) . | quote }}
+            - name: STORAGE_SSL
+              value: {{ .Values.config.storage.ssl | quote }}
+            - name: STORAGE_KEY_ID
+              value: {{ .Values.config.storage.keyID | quote }}
+            - name: STORAGE_SECRET_KEY
+              value: {{ .Values.config.storage.secretKey | quote }}
+            - name: STORAGE_REGION
+              value: {{ .Values.config.storage.region | quote }}
+            - name: STORAGE_BUCKET
+              value: {{ .Values.config.storage.bucket | quote }}
+            {{- end }}
+{{- if .Values.global }}{{- if .Values.global.certs }}{{- if .Values.global.certs.enabled }}
+          volumeMounts:
+{{- include "qlik.ca-certificates.volumeMount" . | nindent 12 }}
+{{- end }}{{- end }}{{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.port }}
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.service.port }}
+{{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 8 }}
+{{- end }}
+{{- if .Values.global }}{{- if .Values.global.certs }}{{- if .Values.global.certs.enabled }}
+      volumes:
+{{- include "qlik.ca-certificates.volume" . | nindent 8 }}
+{{- end }}{{- end }}{{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+  selector:
+    matchLabels:
+      app: {{ template "audit.name" . }}
+      release: {{ .Release.Name }}

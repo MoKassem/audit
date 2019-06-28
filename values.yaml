@@ -1,0 +1,211 @@
+## Default values for Audit Service Helm Chart.
+## This is a YAML-formatted file.
+## Declare variables to be passed into your templates.
+
+## Audit service configuration
+##
+config:
+  ## Endpoint to reach the policy-decisions - override the default of http://{.Release.Name}-policy-decisions:5080
+  # pdsURI:
+  ## Access Control / rules enforcement setup
+  accessControl:
+    ## When enabled, rules are enforced
+    enabled: true
+  ## Log level (debug|info|warn|error)
+  logLevel: info
+  ## Endpoint to reach the feature-flags
+  featureFlagsURI: http://{{ .Release.Name }}-feature-flags:8080
+
+  ## Authentication configurations.
+  ##
+  auth:
+    ## Toggle JWT validation using retrieved keys from the configured JWKS endpoint
+    enabled: true
+    ## Endpoint to retrieve the JWKS - override the default of http://{.Release.Name}-keys:8080/v1/keys/qlik.api.internal
+    # jwksURI:
+    ## Expected `audience` value within the JWT claims
+    jwtAud: qlik.api.internal
+    ## Expected `issuer` value within the JWT claims
+    jwtIss: qlik.api.internal
+
+  ## Token authentication configuration
+  ##
+  tokenAuth:
+    ## Toggle to enable token authentication
+    enabled: true
+    ## The private key for the self-signed service JWT
+    privateKey: |
+      -----BEGIN EC PRIVATE KEY-----
+      MIGkAgEBBDAIjTfnfDoa9CeEIrlXJpZwc+Le1Hbh7LwooQh9YbpdBw5nIQORGAI0
+      EsGEiUPDiMqgBwYFK4EEACKhZANiAATs3JLJEL1y7pUQ6u1eOhJ3M5BVRPZRQ4du
+      ouRsRM/wkAb+OlMAsyFZCuEgtDF14G/2RY4gepUkARBFCgEO0E3WarSEHQMS26pN
+      fkRHHEUAaOvT6vP4+BqgQmh+0MbStKI=
+      -----END EC PRIVATE KEY-----
+    ## Unique identifier for the key (public)
+    kid: "V5uEI2x2sYjIq0Ezz7NlqoExS1Y4dvwhdt3iakflxGY"
+    ## Token validation endpoint URL
+    url: "http://{{ .Release.Name }}-edge-auth:8080/v1/internal-tokens"
+    ## For localdev use this configuration instead
+    # url: "http://edge-auth:8080/v1/internal-tokens"
+
+  ## NATS configuration
+  ##
+  nats:
+    ## Toggle to enable messaging
+    enabled: true
+    ## Comma separated list of NATS servers
+    servers: "nats://{{ .Release.Name }}-nats-client:4222"
+    ## For localdev use this configuration instead
+    # servers: "nats://messaging-nats-client:4222"
+    ## Comma separated list of system event channels to subscribe to
+    channels: system-events.engine.app,system-events.user-session,system-events.spaces,system-events.licenses
+
+  ## NATS Streaming configuration
+  ##
+  stan:
+    ## NATS Streaming cluster ID
+    clusterID: "{{ .Release.Name }}-nats-streaming-cluster"
+    ## For localdev use this configuration instead
+    # clusterID: "messaging-nats-streaming-cluster"
+
+  ## Long term archiving options
+  ##
+  archive:
+    ## Toogle to enable archiving
+    enabled: false
+    ## Repeat interval for validating and archiving the data
+    interval: 1h
+
+  ## S3 configuration for the long term storage archiving
+  ##
+  storage:
+    ## Endpoint to storage provider
+    endpoint: "{{ .Release.Name }}-minio:9000"
+    ## Toogle to use secured connection
+    ssl: false
+    ## Storage access key ID. This is a dummy default value set by MinIO chart
+    keyID: AKIAIOSFODNN7EXAMPLE
+    ## Storage secret access key. This is a dummy default secret set by MinIO chart
+    secretKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    ## Bucket region
+    region: us-east-1
+    ## Bucket to be used for audits archive
+    bucket: audits
+
+## Image configuration
+##
+image:
+  ## Default registry where this repository should be pulled from. Will be overridden by `global.imageRegistry` if set
+  registry: qliktech-docker.jfrog.io
+  ## Audit image.
+  repository: audit
+  ## Audit image version.
+  ## ref: https://hub.docker.com/r/qlik/audit/tags/
+  tag: 1.6.0
+
+  ## Specify a imagePullPolicy: 'Always' if imageTag is 'latest', else set to 'IfNotPresent'.
+  ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  ##
+  # pullPolicy: IfNotPresent
+
+## Secrets for pulling images from a private docker registry.
+##
+imagePullSecrets:
+  - name: artifactory-docker-secret
+
+## Number of replicas.
+replicaCount: 1
+
+## Additional pod labels
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+##
+podLabels:
+  ## Pod label required to allow communication with NATS
+  "{{ .Release.Name }}-nats-client": "true"
+
+## Number of seconds to wait during pod termination after sending SIGTERM until SIGKILL.
+##
+terminationGracePeriodSeconds: 30
+
+## Service configuration.
+## ref: https://kubernetes.io/docs/user-guide/services/
+##
+service:
+  type: ClusterIP
+  port: 6080
+
+## Ingress configuration.
+## ref: https://kubernetes.io/docs/user-guide/ingress/
+##
+ingress:
+  ## Class provides an kubernetes.io/ingress.class override of default nginx
+  class: "nginx"
+
+  ## AuthURL override of default http://{.Release.Name}.{.Release.Namespace}.svc.cluster.local:8080/v1/auth
+  # authURL:
+
+  ## Annotations to be added to the ingress.
+  ##
+  annotations: []
+
+## Metrics configuration
+##
+metrics:
+  ## Prometheus configuration
+  prometheus:
+    ## prometheus.enabled determines whether the annotations for prometheus scraping are included
+    enabled: true
+
+## MongoDB configuration
+##
+mongodb:
+  image:
+    ## Bitnami MongoDB image tag
+    ## ref: https://hub.docker.com/r/bitnami/mongodb/tags/
+    ## This value overrides the mongo image tag in chart v.4.5.0 (tag: 4.0.3-debian-9)
+    tag: 3.6.6-debian-9
+  ## Enables a local mongo chart
+  enabled: true
+  ## Disable password for local dev mode
+  usePassword: false
+
+  ## Specify a custom mongo uri. Not needed when the local mongo is enabled.
+  ## Secret: {{ Release.Name }}-mongoconfig.mongo-uri
+  # uri:
+
+  ## name of secret to mount for mongo URI. The secret must have the `mongodb-uri` key
+  # uriSecretName:
+
+## Messaging chart configuration
+##
+messaging:
+  ## Set messaging.enabled to true for localdev and CI builds
+  enabled: false
+  nats:
+    enabled: true
+    replicaCount: 1
+    auth:
+      enabled: false
+    clusterAuth:
+      enabled: false
+  nats-streaming:
+    enabled: true
+    replicaCount: 3
+    auth:
+      enabled: false
+
+## MinIO chart configuration
+##
+minio:
+  ## Set minio.enabled to true for localdev
+  enabled: false
+  ## Default minio port
+  service:
+    port: 9000
+  ## Default bucket creation
+  ##
+  defaultBucket:
+    ## Should be created when the chart is deployed
+    enabled: true
+    ## Default bucket name
+    name: audits
