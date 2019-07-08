@@ -1,0 +1,17 @@
+apiVersion: qlik.com/v1
+kind: HelmChart
+metadata:
+  name: mongodb
+chartHome: .
+chartRepo: https://kubernetes-charts.storage.googleapis.com
+chartName: mongodb
+chartVersion: 4.5.0
+releaseName: mongodb
+values:
+  image:
+    ## Bitnami MongoDB image tag
+    ## ref: https://hub.docker.com/r/bitnami/mongodb/tags/
+    ## This value overrides the mongo image tag in chart v.4.5.0 (tag: 4.0.3-debian-9)
+    tag: 3.6.6-debian-9
+  ## Disable password for local dev mode
+  usePassword: false

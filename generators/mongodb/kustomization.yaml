@@ -1,5 +1,4 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-generators:
-  - generators
-  - generators/mongodb
+resources:
+- mongodb.yaml 
