@@ -4,4 +4,4 @@ metadata:
   name: audit
 chartName: audit
 releaseName: audit
-chartHome: ../
+chartHome: ../../
