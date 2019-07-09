@@ -2,11 +2,10 @@ apiVersion: qlik.com/v1
 kind: HelmChart
 metadata:
   name: mongodb
-chartHome: .
 chartRepo: https://kubernetes-charts.storage.googleapis.com
 chartName: mongodb
 chartVersion: 4.5.0
-releaseName: mongodb
+releaseName: audit
 values:
   image:
     ## Bitnami MongoDB image tag
