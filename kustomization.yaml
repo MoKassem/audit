@@ -3,3 +3,4 @@ kind: Kustomization
 generators:
   - generators/audit
   - generators/mongodb
+  - generators/messaging
