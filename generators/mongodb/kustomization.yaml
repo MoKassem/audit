@@ -3,4 +3,4 @@ kind: Kustomization
 transformers:
 - ../../values
 resources:
-- mongodb.yaml 
+- github.com/qlik-oss/mongodb-resources//generators
