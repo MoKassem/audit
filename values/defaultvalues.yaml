@@ -163,6 +163,16 @@ values:
       ## prometheus.enabled determines whether the annotations for prometheus scraping are included
       enabled: true
 
+mongodb:
+    ## Specify a custom mongo uri. Not needed when the local mongo is enabled.
+    ## Secret: {{ Release.Name }}-mongoconfig.mongo-uri
+    # uri:
+
+    ## name of secret to mount for mongo URI. The secret must have the `mongodb-uri` key
+    # uriSecretName:
+
+# Component configurations
+subvalues:
   ## MongoDB configuration
   ##
   mongodb:
@@ -176,18 +186,10 @@ values:
     ## Disable password for local dev mode
     usePassword: false
 
-    ## Specify a custom mongo uri. Not needed when the local mongo is enabled.
-    ## Secret: {{ Release.Name }}-mongoconfig.mongo-uri
-    # uri:
-
-    ## name of secret to mount for mongo URI. The secret must have the `mongodb-uri` key
-    # uriSecretName:
-
   ## Messaging chart configuration
   ##
   messaging:
     ## Set messaging.enabled to true for localdev and CI builds
-    enabled: false
     nats:
       enabled: true
       replicaCount: 1
@@ -204,8 +206,6 @@ values:
   ## MinIO chart configuration
   ##
   minio:
-    ## Set minio.enabled to true for localdev
-    enabled: false
     ## Default minio port
     service:
       port: 9000
