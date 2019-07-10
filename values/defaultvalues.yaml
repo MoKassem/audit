@@ -163,7 +163,7 @@ values:
       ## prometheus.enabled determines whether the annotations for prometheus scraping are included
       enabled: true
 
-mongodb:
+  mongodb:
     ## Specify a custom mongo uri. Not needed when the local mongo is enabled.
     ## Secret: {{ Release.Name }}-mongoconfig.mongo-uri
     # uri:
@@ -172,7 +172,7 @@ mongodb:
     # uriSecretName:
 
 # Component configurations
-subvalues:
+chartValues:
   ## MongoDB configuration
   ##
   mongodb:
