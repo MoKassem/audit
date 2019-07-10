@@ -164,6 +164,8 @@ values:
       enabled: true
 
   mongodb:
+    ## Enables a local mongo chart (redundant)
+    enabled: true
     ## Specify a custom mongo uri. Not needed when the local mongo is enabled.
     ## Secret: {{ Release.Name }}-mongoconfig.mongo-uri
     # uri:
