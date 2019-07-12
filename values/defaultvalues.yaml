@@ -108,7 +108,7 @@ values:
     repository: audit
     ## Audit image version.
     ## ref: https://hub.docker.com/r/qlik/audit/tags/
-    tag: 1.7.0
+    tag: 1.6.0
 
     ## Specify a imagePullPolicy: 'Always' if imageTag is 'latest', else set to 'IfNotPresent'.
     ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -163,18 +163,6 @@ values:
       ## prometheus.enabled determines whether the annotations for prometheus scraping are included
       enabled: true
 
-  mongodb:
-    ## Enables a local mongo chart (redundant)
-    enabled: true
-    ## Specify a custom mongo uri. Not needed when the local mongo is enabled.
-    ## Secret: {{ Release.Name }}-mongoconfig.mongo-uri
-    # uri:
-
-    ## name of secret to mount for mongo URI. The secret must have the `mongodb-uri` key
-    # uriSecretName:
-
-# Component configurations
-chartValues:
   ## MongoDB configuration
   ##
   mongodb:
@@ -188,10 +176,18 @@ chartValues:
     ## Disable password for local dev mode
     usePassword: false
 
+    ## Specify a custom mongo uri. Not needed when the local mongo is enabled.
+    ## Secret: {{ Release.Name }}-mongoconfig.mongo-uri
+    # uri:
+
+    ## name of secret to mount for mongo URI. The secret must have the `mongodb-uri` key
+    # uriSecretName:
+
   ## Messaging chart configuration
   ##
   messaging:
     ## Set messaging.enabled to true for localdev and CI builds
+    enabled: false
     nats:
       enabled: true
       replicaCount: 1
@@ -208,6 +204,8 @@ chartValues:
   ## MinIO chart configuration
   ##
   minio:
+    ## Set minio.enabled to true for localdev
+    enabled: false
     ## Default minio port
     service:
       port: 9000
