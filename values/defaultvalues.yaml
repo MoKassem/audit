@@ -4,6 +4,7 @@ metadata:
   name: audit
 releaseName: audit
 releaseNamespace: audit
+chartName: audit
 values:
   ## Default values for Audit Service Helm Chart.
   ## This is a YAML-formatted file.
@@ -175,6 +176,7 @@ values:
     enabled: true
     ## Disable password for local dev mode
     usePassword: false
+    something: here
 
     ## Specify a custom mongo uri. Not needed when the local mongo is enabled.
     ## Secret: {{ Release.Name }}-mongoconfig.mongo-uri
