@@ -1,0 +1,117 @@
+default-job-init: &default-job-init
+  docker:
+    - image: qlik/tiny-build
+remote_docker_version: &remote_docker_version
+  version: 18.06.0-ce
+
+version: 2.0
+jobs:
+  independent-component-ci:
+    working_directory: ~/audit
+    docker:
+      - image: qliktech-docker-snapshot.jfrog.io/k8s-cluster-gke:0.0.4-430
+        auth:
+          username: $ART_USERNAME
+          password: $ART_PASSWORD
+    environment:
+      CLOUDSDK_CORE_PROJECT: qsefe-ci-verification
+      TARGET_CLUSTER: elastic-charts-ci-gke
+      TARGET_PLATFORM: gke
+      REGION: us-central1
+      KEYVAL_FILE: .keyval_file
+      SERVICE_NAME: audit
+    steps:
+      - checkout
+      - run:
+          name: download-plugins
+          shell: /bin/bash
+          command: |
+            svn checkout "https://github.com/qlik-oss/qliksense/trunk/kustomize" $HOME/.config/kustomize
+            cd $HOME/.config/kustomize
+            chmod -R +x plugin
+      - run:
+          name: setup-isolated-namespace
+          shell: /bin/bash
+          command: |
+            if [ ! -f "$HOME/$KEYVAL_FILE" ]; then touch $HOME/$KEYVAL_FILE; fi
+
+            # Login to the K8 cluster on the target platform
+            ./ci/scripts/cluster-login.sh
+
+            # Create and configure a unique namespace
+            ./ci/scripts/install-namespace.sh
+      - run:
+          name: build-apply-component
+          shell: /bin/bash
+          command: |
+            # Apply K8 manifests to the cluster
+            cd ci/${TARGET_PLATFORM}
+            kustomize build . --enable_alpha_plugins | kubectl apply -f -
+
+      - run:
+          name: check-pods-are-ready
+          shell: /bin/bash
+          command: |
+            # Run check pod (check if pods are running and ready)
+            ./ci/scripts/check-pods.sh
+      - run:
+          name: export-pod-logs
+          shell: /bin/bash
+          when: on_fail
+          command: |
+            ./ci/scripts/export-pod-logs.sh
+      - run:
+          name: namespace-cleanup
+          shell: /bin/bash
+          no_output_timeout: 20m
+          when: always
+          command: |
+            # Cleanup namespace if exits
+            ./ci/scripts/delete-namespace.sh
+      - store_artifacts:
+          path: /tmp/podlogs
+          destination: podlogs
+
+  gke-namespace-cleanup:
+    working_directory: ~/audit
+    docker:
+      - image: qliktech-docker.jfrog.io/k8s-cluster-gke
+        auth:
+          username: $ART_USERNAME
+          password: $ART_PASSWORD
+    environment:
+      CLOUDSDK_CORE_PROJECT: qsefe-ci-verification
+      TARGET_CLUSTER: elastic-charts-ci-gke
+      TARGET_PLATFORM: gke
+      REGION: us-central1
+    steps:
+      - checkout
+      - run:
+          name: cleanup-namespaces
+          shell: /bin/bash
+          command: |
+            # Login to the K8 cluster on the target platform
+            ./ci/scripts/cluster-login.sh
+
+            # Clean-up labeled CI namespaces
+            ./ci/scripts/cleanup-namespaces.sh
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - independent-component-ci:
+          filters:
+            branches:
+              ignore:
+                - master
+  namespace-cleanup:
+    jobs:
+      - gke-namespace-cleanup
+    triggers:
+      - schedule:
+          cron: "0 * * * *"
+          filters:
+            branches:
+              only:
+                - master

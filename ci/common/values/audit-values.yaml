@@ -1,0 +1,15 @@
+apiVersion: qlik.com/v1
+kind: HelmValues
+metadata:
+  name: audit
+releaseName: audit
+releaseNamespace: audit
+chartName: audit
+values:
+  ## CI values overrides for Audit Service Helm Chart.
+  ## This is a YAML-formatted file.
+  config:
+    featureFlagsURI: null
+    tokenAuth:
+      ## Toggle to enable token authentication
+      enabled: false
