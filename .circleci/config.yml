@@ -9,7 +9,7 @@ jobs:
   independent-component-ci:
     working_directory: ~/audit
     docker:
-      - image: qliktech-docker-snapshot.jfrog.io/k8s-cluster-gke:0.0.4-430
+      - image: qliktech-docker-snapshot.jfrog.io/k8s-cluster-gke
         auth:
           username: $ART_USERNAME
           password: $ART_PASSWORD
