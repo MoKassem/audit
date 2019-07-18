@@ -18,7 +18,7 @@ echo ${NAMESPACE_PATCH} > releaseNamespace.yaml
 
 
 
-ech "$GENERATED_NAMESPACE"
+echo "$GENERATED_NAMESPACE"
 cat releaseNamespace.yaml
 
 
