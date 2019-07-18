@@ -11,7 +11,7 @@ check_req_env_vars
 
 setup_kubectl_context
 
-[ -d ci/configs/${TARGET_PLATFORM} ] && cd ci/${TARGET_PLATFORM/values}
+[ -d ci/configs/${TARGET_PLATFORM} ] && cd ci/configs/${TARGET_PLATFORM/values}
 ## Substitute the GENERATED_NAMESPACE in the releaseNamespace.yaml patch
 NAMESPACE_PATCH=$(cat releaseNamespace.yaml | envsubst) && echo ${NAMESPACE_PATCH} > releaseNamespace.yaml
 
