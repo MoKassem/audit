@@ -13,8 +13,15 @@ setup_kubectl_context
 
 [ -d ci/configs/${TARGET_PLATFORM} ] && cd ci/configs/${TARGET_PLATFORM}/values
 ## Substitute the GENERATED_NAMESPACE in the releaseNamespace.yaml patch
-NAMESPACE_PATCH=$(cat releaseNamespace.yaml | envsubst) && echo ${NAMESPACE_PATCH} > releaseNamespace.yaml
+NAMESPACE_PATCH=$(cat releaseNamespace.yaml | envsubst)
+echo ${NAMESPACE_PATCH} > releaseNamespace.yaml
 
-cd ..
-yq w -i kustomization.yaml namespace ${GENERATED_NAMESPACE}
-kustomize build . --enable_alpha_plugins | kubectl apply -f -
+
+
+ech "$GENERATED_NAMESPACE"
+cat releaseNamespace.yaml
+
+
+#cd ..
+#yq w -i kustomization.yaml namespace ${GENERATED_NAMESPACE}
+#kustomize build . --enable_alpha_plugins | kubectl apply -f -
