@@ -13,8 +13,9 @@ setup_kubectl_context
 
 [ -d ci/configs/${TARGET_PLATFORM} ] && cd ci/configs/${TARGET_PLATFORM}/values
 ## Substitute the GENERATED_NAMESPACE in the releaseNamespace.yaml patch
-cat releaseNamespace.yaml | envsubst > tmp.yaml
-cat tmp.yaml > releaseNamespace.yaml
+cat releaseNamespace.yaml | envsubst > processedReleaseNamespace.yaml
+cat processedReleaseNamespace.yaml > releaseNamespace.yaml
+rm -f processedReleaseNamespace.yaml
 
 cd ..
 yq w -i kustomization.yaml namespace ${GENERATED_NAMESPACE}
