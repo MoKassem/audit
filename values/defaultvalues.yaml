@@ -3,7 +3,7 @@ kind: HelmValues
 metadata:
   name: audit
 releaseName: audit
-releaseNamespace: audit
+releaseNamespace: default
 chartName: audit
 values:
   ## Default values for Audit Service Helm Chart.

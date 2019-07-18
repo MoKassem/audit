@@ -2,8 +2,6 @@ apiVersion: qlik.com/v1
 kind: HelmValues
 metadata:
   name: audit
-releaseName: audit
-releaseNamespace: audit
 chartName: audit
 values:
   ## CI values overrides for Audit Service Helm Chart.
