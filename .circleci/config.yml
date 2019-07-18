@@ -45,9 +45,7 @@ jobs:
           shell: /bin/bash
           command: |
             # Apply K8 manifests to the cluster
-            [ -d ci/${TARGET_PLATFORM} ] && cd ci/${TARGET_PLATFORM}
-            kustomize build . --enable_alpha_plugins | kubectl apply -f -
-
+            ./ci/scripts/build-apply-component.sh
       - run:
           name: check-pods-are-ready
           shell: /bin/bash
