@@ -3,4 +3,4 @@ kind: HelmValues
 metadata:
   name: audit
 chartName: audit
-releaseNamespace: $GENERATED_NAMESPACE
+releaseNamespace: sammarsafnadjhgfds
